@@ -1,57 +1,74 @@
-import { useState } from 'react';
-import { getStatus, callAI } from './api';
-import './App.css';
+import React, { useState } from "react";
+import CoursePage from "./CoursePage";
+import UserProfile from "./UserProfile";
+import CourseCatalogue from "./CourseCatalogue";
+import "./App.css";
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleStatusClick = async () => {
-    try {
-      setIsLoading(true);
-      const status = await getStatus();
-      alert(`Status: ${JSON.stringify(status)}`);
-    } catch (error) {
-      alert('Error fetching status. Please check the console for details.');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAIClick = async () => {
-    try {
-      setIsLoading(true);
-      const response = await callAI({ message: 'Hello AI' });
-      alert(`AI Response: ${JSON.stringify(response)}`);
-    } catch (error) {
-      alert('Error calling AI. Please check the console for details.');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [page, setPage] = useState("profile");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // For course navigation, optionally store selected course id
+  // Only 'ai' is implemented
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>React API Demo</h1>
-        <div className="button-container">
-          <button 
-            onClick={handleStatusClick} 
-            disabled={isLoading}
-            className="api-button"
-          >
-            {isLoading ? 'Loading...' : 'Check Status'}
-          </button>
-          <button 
-            onClick={handleAIClick} 
-            disabled={isLoading}
-            className="api-button"
-          >
-            {isLoading ? 'Processing...' : 'Send to AI'}
-          </button>
-        </div>
+    <div className="app-root">
+      {/* Sticky Header */}
+      <header className="app-header">
+        <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <span className="hamburger" />
+        </button>
+        <h1 className="header-title">LearnAI Platform</h1>
       </header>
+
+      <div className="app-layout">
+        {/* Sidebar (collapsible on mobile) */}
+        <nav className={`sidebar${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)}>
+          <div className="sidebar-content">
+            <button
+              className={`sidebar-link${page === "profile" ? " active" : ""}`}
+              onClick={e => { e.stopPropagation(); setPage("profile"); setSelectedCourse(null); }}
+            >
+              User Profile
+            </button>
+            <button
+              className={`sidebar-link${page === "catalogue" ? " active" : ""}`}
+              onClick={e => { e.stopPropagation(); setPage("catalogue"); setSelectedCourse(null); }}
+            >
+              Course Catalogue
+            </button>
+            {/* Only show Course Page if a course is selected */}
+            {selectedCourse === "ai" && (
+              <button
+                className={`sidebar-link${page === "course" ? " active" : ""}`}
+                onClick={e => { e.stopPropagation(); setPage("course"); }}
+              >
+                Introduction to AI
+              </button>
+            )}
+
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className="main-content">
+          <div className="main-card">
+            {page === "profile" && <UserProfile />}
+            {page === "catalogue" && (
+              <CourseCatalogue
+                onSelectCourse={courseId => {
+                  if (courseId === "ai") {
+                    setSelectedCourse("ai");
+                    setPage("course");
+                  }
+                }}
+              />
+            )}
+            {page === "course" && selectedCourse === "ai" && <CoursePage />}
+
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
