@@ -1,2 +1,8 @@
+# Backend Dependencies
 Flask==3.0.0
 flask-cors==4.0.0
+python-dotenv==1.0.0
+
+# Frontend Dependencies (to be installed separately)
+# React dependencies will be managed by npm
+# Add frontend dependencies here as needed
