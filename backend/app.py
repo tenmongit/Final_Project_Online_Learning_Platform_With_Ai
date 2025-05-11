@@ -1,15 +1,61 @@
+print('DEBUG: Starting app.py')
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
 import json
 import os
+from flask_sqlalchemy import SQLAlchemy
+from models import db, User, QuizResult
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 load_dotenv()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
+db.init_app(app)
+
+print('DEBUG: End of app.py (minimal test)')
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    if not data or not all(k in data for k in ("username", "email", "password")):
+        return jsonify({"error": "Missing username, email, or password"}), 400
+    username = data["username"].strip()
+    email = data["email"].strip()
+    password = data["password"]
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "Username already exists"}), 409
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already exists"}), 409
+
+    password_hash = generate_password_hash(password)
+    new_user = User(username=username, email=email, password_hash=password_hash)
+    db.session.add(new_user)
+    db.session.commit()
+    logger.info(f"New user registered: {username} ({email})")
+    return jsonify({"message": "User registered successfully!"}), 201
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    if not data or not ("username" in data or "email" in data) or "password" not in data:
+        return jsonify({"error": "Missing username/email or password"}), 400
+    identifier = data.get("username") or data.get("email")
+    password = data["password"]
+    user = User.query.filter((User.username == identifier) | (User.email == identifier)).first()
+    if user and check_password_hash(user.password_hash, password):
+        logger.info(f"User logged in: {user.username} ({user.email})")
+        return jsonify({"message": "Login successful!", "username": user.username, "email": user.email}), 200
+    else:
+        logger.warning(f"Failed login attempt for: {identifier}")
+        return jsonify({"error": "Invalid username/email or password"}), 401
 
 @app.route("/api/explain", methods=["POST"])
 def explain():
@@ -19,9 +65,8 @@ def explain():
         return jsonify({"error": "Missing 'text' in request body"}), 400
     highlighted_text = data["text"]
     logger.info(f"Explain endpoint called with text: {highlighted_text}")
-    # Real AI explanation
-    from .services.ai_model import explain as ai_explain
-    explanation = ai_explain(highlighted_text)
+    # Mock AI explanation
+    explanation = f"Machine learning is a field of AI that gives computers the ability to learn from data. (mock for: '{highlighted_text}')"
     return jsonify({"explanation": explanation})
 
 @app.route("/api/chat", methods=["POST"])
@@ -32,13 +77,14 @@ def chat():
         return jsonify({"error": "Missing 'message' in request body"}), 400
     message = data["message"]
     logger.info(f"Chat endpoint called with message: {message}")
-    # DeepSeek AI chat reply
-    from .services.ai_service import generate_ai_response
-    reply = generate_ai_response(message)
-    logger.info(f"DeepSeek reply: {reply}")
-    # Always return a reply, even if empty or error
+    # AI chat reply (mock or real)
+    try:
+        from services.ai_service import generate_ai_response
+        reply = generate_ai_response(message)
+    except Exception as e:
+        reply = f"[AI error: {e}]"
     if not reply:
-        reply = "[No response from DeepSeek]"
+        reply = "[No response from AI]"
     return jsonify({"reply": reply})
 
 @app.route("/api/quiz/submit", methods=["POST"])
@@ -95,8 +141,10 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     logger.info("Starting Flask application...")
     print("\nRegistered endpoints:")
     for rule in app.url_map.iter_rules():
         print(f"{rule} -> {rule.endpoint} (methods: {','.join(rule.methods)})")
-    app.run(port=5000)
+    app.run(debug=True)
