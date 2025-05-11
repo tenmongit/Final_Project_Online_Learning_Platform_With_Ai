@@ -2,6 +2,8 @@
 Flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
+huggingface_hub>=0.21.0
+transformers>=4.36.0
 
 # Frontend Dependencies (install with npm or yarn, not pip)
 # These are for reference only:
