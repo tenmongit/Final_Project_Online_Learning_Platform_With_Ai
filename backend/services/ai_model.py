@@ -1,14 +1,19 @@
-from transformers import pipeline
+import os
+from huggingface_hub import InferenceClient
 
-_summarizer = None
-
-def explain(text):
-    global _summarizer
-    if _summarizer is None:
-        _summarizer = pipeline("summarization", model="t5-small")
-    # HuggingFace pipeline expects a string, returns a list of dicts
-    result = _summarizer(text, max_length=60, min_length=10, do_sample=False)
-    return result[0]['summary_text']
+def explain(prompt):
+    api_key = os.getenv("HUGGINGFACE_API_KEY")
+    if not api_key:
+        return "[AI error: HuggingFace API key not set]"
+    client = InferenceClient(token=api_key, provider="novita")
+    try:
+        completion = client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-V3-0324",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"[AI error: {e}]"
 
 def chat(message):
     """Stub for future AI chat logic."""

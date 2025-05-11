@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from models import db, User
+from backend.models import db, User
 from app import app
 
 with app.app_context():

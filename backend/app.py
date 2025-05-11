@@ -5,7 +5,7 @@ import logging
 import json
 import os
 from flask_sqlalchemy import SQLAlchemy
-from models import db, User, QuizResult
+from backend.models import db, User, QuizResult
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 load_dotenv()
@@ -64,9 +64,20 @@ def explain():
         logger.warning("Explain endpoint: Missing 'text' in request body")
         return jsonify({"error": "Missing 'text' in request body"}), 400
     highlighted_text = data["text"]
-    logger.info(f"Explain endpoint called with text: {highlighted_text}")
-    # Mock AI explanation
-    explanation = f"Machine learning is a field of AI that gives computers the ability to learn from data. (mock for: '{highlighted_text}')"
+    level = data.get("level", "student")  # Optional: allow future extensibility
+    logger.info(f"Explain endpoint called with text: {highlighted_text} | level: {level}")
+    prompt = (
+        f"Explain the following concept in simple terms for a {level}. "
+        f"Break down jargon, use analogies or real-world examples, and make it clear and concise.\n\n"
+        f"Concept: {highlighted_text}\n\n"
+        f"Explanation:"
+    )
+    try:
+        from backend.services.ai_model import explain as ai_explain
+        explanation = ai_explain(prompt)
+    except Exception as e:
+        logger.error(f"AI explanation error: {e}")
+        explanation = f"[AI error: {e}]"
     return jsonify({"explanation": explanation})
 
 @app.route("/api/chat", methods=["POST"])
@@ -77,11 +88,12 @@ def chat():
         return jsonify({"error": "Missing 'message' in request body"}), 400
     message = data["message"]
     logger.info(f"Chat endpoint called with message: {message}")
-    # AI chat reply (mock or real)
     try:
-        from services.ai_service import generate_ai_response
+        from backend.services.ai_service import generate_ai_response
         reply = generate_ai_response(message)
+        logger.info(f"AI reply: {reply}")
     except Exception as e:
+        logger.error(f"AI chat error: {e}")
         reply = f"[AI error: {e}]"
     if not reply:
         reply = "[No response from AI]"

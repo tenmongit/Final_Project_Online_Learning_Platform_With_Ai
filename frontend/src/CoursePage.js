@@ -92,86 +92,6 @@ export default function CoursePage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [showChatbot, setShowChatbot] = useState(false);
 
-  // Floating explain button for highlighted text
-  const [highlight, setHighlight] = useState({ text: '', x: 0, y: 0, show: false });
-  const contentRef = useRef(null);
-
-  // Show floating explain button on selection
-  const handleSelection = (e) => {
-    const selection = window.getSelection();
-    const text = selection.toString();
-    if (text.length > 0 && contentRef.current && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      // Only show if selection is inside course content
-      const contentRect = contentRef.current.getBoundingClientRect();
-      if (
-        rect.bottom > contentRect.top &&
-        rect.top < contentRect.bottom &&
-        rect.right > contentRect.left &&
-        rect.left < contentRect.right
-      ) {
-        setHighlight({
-          text,
-          x: rect.right + window.scrollX,
-          y: rect.bottom + window.scrollY,
-          show: true
-        });
-        return;
-      }
-    }
-    setHighlight({ text: '', x: 0, y: 0, show: false });
-  };
-
-  // Hide floating button on click outside or selection change
-  useEffect(() => {
-    const handleClick = (e) => {
-      setHighlight(h => ({ ...h, show: false }));
-    };
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (!selection || !selection.toString()) {
-        setHighlight(h => ({ ...h, show: false }));
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
-  }, []);
-
-  // Small modal for floating explain
-  const [smallModal, setSmallModal] = useState({ open: false, content: '', loading: false, error: null, x: 0, y: 0 });
-
-  // Explain highlighted text (floating button)
-  const handleExplainHighlight = async () => {
-    if (!highlight.text) return;
-    setSmallModal({ open: true, content: '', loading: true, error: null, x: highlight.x, y: highlight.y });
-    try {
-      const res = await fetch("http://localhost:5000/api/explain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: highlight.text })
-      });
-      const data = await res.json();
-      setSmallModal({ open: true, content: data.explanation || "[No reply]", loading: false, error: null, x: highlight.x, y: highlight.y });
-    } catch (e) {
-      setSmallModal({ open: true, content: '', loading: false, error: 'Failed to fetch explanation.', x: highlight.x, y: highlight.y });
-    }
-    setHighlight({ text: '', x: 0, y: 0, show: false });
-  };
-
-  // Hide small modal on click outside
-  useEffect(() => {
-    if (!smallModal.open) return;
-    const handleClick = (e) => {
-      setSmallModal(m => ({ ...m, open: false }));
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [smallModal.open]);
 
   // Big explain button at the bottom (unchanged)
   const handleExplain = async () => {
@@ -233,8 +153,6 @@ export default function CoursePage() {
         <h1 className="text-2xl md:text-3xl font-bold mb-6 text-teal-700 text-center drop-shadow">Course: Introduction to AI</h1>
         <div
           className="space-y-8 bg-gray-50 rounded-lg p-4 md:p-8 shadow"
-          ref={contentRef}
-          onMouseUp={handleSelection}
         >
         <section>
           <h2 className="font-semibold text-lg mb-2 text-teal-500">What is AI?</h2>
@@ -276,32 +194,6 @@ export default function CoursePage() {
         Explain Selected Text
       </button>
 
-      {/* Floating Explain Button for Highlighted Text */}
-      {highlight.show && typeof window !== 'undefined' && ReactDOM.createPortal(
-        <button
-          style={{ position: 'absolute', left: highlight.x + 8, top: highlight.y + 8, zIndex: 9999 }}
-          className="bg-teal-600 text-white px-3 py-1 rounded shadow hover:bg-teal-700 transition-colors text-xs"
-          onClick={e => { e.stopPropagation(); handleExplainHighlight(); }}
-        >
-          Explain
-        </button>,
-        document.body
-      )}
-
-      {/* Small Modal for Floating Explain Button */}
-      {smallModal.open && typeof window !== 'undefined' && ReactDOM.createPortal(
-        <div
-          style={{ position: 'absolute', left: smallModal.x + 8, top: smallModal.y + 24, zIndex: 10000, minWidth: 260, maxWidth: 350 }}
-          className="bg-white rounded-lg shadow-lg p-4 border border-teal-200"
-          onMouseDown={e => e.stopPropagation()}
-        >
-          <button className="absolute top-2 right-3 text-teal-400 hover:text-teal-600 text-xl font-bold" onClick={() => setSmallModal(m => ({ ...m, open: false }))}>&times;</button>
-          {smallModal.loading && <div>Loading...</div>}
-          {smallModal.error && <div className="text-red-500">{smallModal.error}</div>}
-          {!smallModal.loading && !smallModal.error && <div>{smallModal.content}</div>}
-        </div>,
-        document.body
-      )}
 
       {/* Modal for AI Explanation */}
       {modal.open && (
