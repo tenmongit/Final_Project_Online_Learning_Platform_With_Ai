@@ -1,0 +1,33 @@
+{
+  "id": "intro-to-ai",
+  "title": "Introduction to AI",
+  "modules": [
+    {
+      "id": "module1",
+      "title": "What is AI?",
+      "sections": [
+        {
+          "id": "section1",
+          "title": "Definition",
+          "content": "Artificial Intelligence (AI) is the simulation of human intelligence in machines that are programmed to think and learn."
+        },
+        {
+          "id": "section2",
+          "title": "History",
+          "content": "The history of AI began in the 1950s with the development of the first computers and research into machine learning."
+        }
+      ]
+    },
+    {
+      "id": "module2",
+      "title": "Applications of AI",
+      "sections": [
+        {
+          "id": "section3",
+          "title": "Everyday Uses",
+          "content": "AI is used in virtual assistants, recommendation systems, self-driving cars, and more."
+        }
+      ]
+    }
+  ]
+}
