@@ -90,6 +90,7 @@ export default function CoursePage() {
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
 
+
   // Floating explain button for highlighted text
   const [highlight, setHighlight] = useState({ text: '', x: 0, y: 0, show: false });
   const contentRef = useRef(null);
@@ -148,8 +149,13 @@ export default function CoursePage() {
     if (!highlight.text) return;
     setSmallModal({ open: true, content: '', loading: true, error: null, x: highlight.x, y: highlight.y });
     try {
-      const res = await getExplanation(highlight.text);
-      setSmallModal({ open: true, content: res.response, loading: false, error: null, x: highlight.x, y: highlight.y });
+      const res = await fetch("http://localhost:5000/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: highlight.text })
+      });
+      const data = await res.json();
+      setSmallModal({ open: true, content: data.explanation || "[No reply]", loading: false, error: null, x: highlight.x, y: highlight.y });
     } catch (e) {
       setSmallModal({ open: true, content: '', loading: false, error: 'Failed to fetch explanation.', x: highlight.x, y: highlight.y });
     }
@@ -175,20 +181,36 @@ export default function CoursePage() {
     }
     setModal({ open: true, content: '', loading: true, error: null });
     try {
-      const res = await getExplanation(selection);
-      setModal({ open: true, content: res.response, loading: false, error: null });
+      const res = await fetch("http://localhost:5000/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: selection })
+      });
+      const data = await res.json();
+      setModal({ open: true, content: data.explanation || "[No reply]", loading: false, error: null });
     } catch (e) {
       setModal({ open: true, content: '', loading: false, error: 'Failed to fetch explanation.' });
     }
   };
 
   // Chatbox placeholder submit
-  const handleChatSubmit = (e) => {
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    setChatMessages([...chatMessages, { sender: "user", text: chatInput }]);
+    const userMsg = chatInput;
+    setChatMessages(msgs => [...msgs, { sender: "user", text: userMsg }]);
     setChatInput("");
-    // Placeholder: In real app, send to /api/chat
+    try {
+      const res = await fetch("http://localhost:5000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg })
+      });
+      const data = await res.json();
+      setChatMessages(msgs => [...msgs, { sender: "ai", text: data.reply || "[No reply]" }]);
+    } catch (e) {
+      setChatMessages(msgs => [...msgs, { sender: "ai", text: "[Error: Could not reach AI]" }]);
+    }
   };
 
   return (
@@ -316,17 +338,15 @@ export default function CoursePage() {
               placeholder="Type your message..."
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
-              disabled
             />
             <button
               className="bg-teal-500 text-white px-4 py-2 rounded disabled:bg-gray-300"
               type="submit"
-              disabled
             >
               Send
             </button>
           </form>
-          <div className="text-xs text-teal-400 mt-1">(Chatbot integration coming soon)</div>
+
         </div>
       </div>
     </div>

@@ -3,7 +3,8 @@ from flask_cors import CORS
 import logging
 import json
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,9 @@ def explain():
         return jsonify({"error": "Missing 'text' in request body"}), 400
     highlighted_text = data["text"]
     logger.info(f"Explain endpoint called with text: {highlighted_text}")
-    # Mock AI explanation
-    explanation = f"Machine learning is a field of AI that gives computers the ability to learn from data. (mock for: '{highlighted_text}')"
+    # Real AI explanation
+    from .services.ai_model import explain as ai_explain
+    explanation = ai_explain(highlighted_text)
     return jsonify({"explanation": explanation})
 
 @app.route("/api/chat", methods=["POST"])
@@ -30,8 +32,13 @@ def chat():
         return jsonify({"error": "Missing 'message' in request body"}), 400
     message = data["message"]
     logger.info(f"Chat endpoint called with message: {message}")
-    # Mock AI chat reply
-    reply = "AI works by processing data and learning patterns. (mock reply)"
+    # DeepSeek AI chat reply
+    from .services.ai_service import generate_ai_response
+    reply = generate_ai_response(message)
+    logger.info(f"DeepSeek reply: {reply}")
+    # Always return a reply, even if empty or error
+    if not reply:
+        reply = "[No response from DeepSeek]"
     return jsonify({"reply": reply})
 
 @app.route("/api/quiz/submit", methods=["POST"])
