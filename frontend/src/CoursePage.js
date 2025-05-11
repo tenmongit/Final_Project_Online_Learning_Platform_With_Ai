@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { getExplanation } from "./api";
+import LagoonChatbotIcon from "./LagoonChatbotIcon";
 
 function QuizSection() {
   // Quiz questions and answers
@@ -89,7 +90,7 @@ export default function CoursePage() {
   const [modal, setModal] = useState({ open: false, content: "", loading: false, error: null });
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
-
+  const [showChatbot, setShowChatbot] = useState(false);
 
   // Floating explain button for highlighted text
   const [highlight, setHighlight] = useState({ text: '', x: 0, y: 0, show: false });
@@ -317,27 +318,35 @@ export default function CoursePage() {
       {/* Quiz Section */}
       <QuizSection />
 
-      {/* Chatbot Placeholder */}
-      <div className="mt-10">
-        <h3 className="font-semibold text-teal-500 mb-2">AI Chatbot (coming soon)</h3>
-        <div className="bg-white rounded shadow p-4">
-          <div className="h-32 overflow-y-auto mb-2 flex flex-col gap-2">
+      {/* Lagoon Floating Chatbot Icon & Window */}
+      <LagoonChatbotIcon onClick={() => setShowChatbot(true)} />
+      {showChatbot && ReactDOM.createPortal(
+        <div
+          className="fixed bottom-24 right-10 z-50 w-96 max-w-[98vw] bg-white rounded-2xl shadow-2xl border-2 border-cyan-100 lagoon-fade"
+          style={{ boxShadow: '0 8px 40px 0 rgba(20,184,166,0.16)' }}
+        >
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-t-2xl">
+            <span className="font-semibold text-white text-lg">Lagoon AI Chatbot</span>
+            <button onClick={() => setShowChatbot(false)} className="text-white text-2xl hover:text-cyan-100 font-bold">&times;</button>
+          </div>
+          <div className="p-4 h-72 overflow-y-auto flex flex-col gap-2 bg-white rounded-b-2xl">
             {chatMessages.length === 0 && <div className="text-teal-400">No messages yet.</div>}
             {chatMessages.map((msg, idx) => (
               <div key={idx} className={msg.sender === "user" ? "text-right" : "text-left"}>
-                <span className="inline-block px-3 py-1 rounded bg-cyan-100 text-teal-700 text-sm">
+                <span className={"inline-block px-3 py-1 rounded-full bg-cyan-50 text-teal-700 text-sm shadow-sm " + (msg.sender === "user" ? "bg-cyan-100" : "bg-cyan-50") }>
                   {msg.text}
                 </span>
               </div>
             ))}
           </div>
-          <form className="flex gap-2" onSubmit={handleChatSubmit}>
+          <form className="flex gap-2 px-4 pb-4" onSubmit={handleChatSubmit}>
             <input
               className="flex-1 border border-cyan-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200"
               type="text"
               placeholder="Type your message..."
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
+              autoFocus
             />
             <button
               className="bg-teal-500 text-white px-4 py-2 rounded disabled:bg-gray-300"
@@ -346,9 +355,10 @@ export default function CoursePage() {
               Send
             </button>
           </form>
+        </div>,
+        document.body
+      )}
 
-        </div>
-      </div>
     </div>
   </div>
   );

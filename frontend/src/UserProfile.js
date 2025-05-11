@@ -71,28 +71,36 @@ export default function UserProfile() {
             <div className="flex flex-col items-center">
               {/* Progress Ring */}
               <div className="relative mb-2">
-                <svg className="w-20 h-20 rotate-[-90deg]" viewBox="0 0 40 40">
-                  <circle
-                    cx="20" cy="20" r="18"
-                    fill="none"
-                    stroke="#e0e7ff"
-                    strokeWidth="4"
-                  />
-                  <circle
-                    cx="20" cy="20" r="18"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="4"
-                    strokeDasharray={2 * Math.PI * 18}
-                    strokeDashoffset={2 * Math.PI * 18 * (1 - progress.percent / 100)}
-                    strokeLinecap="round"
-                  />
-                  <text
-                    x="50%" y="54%" textAnchor="middle" className="fill-teal-700 text-xl font-bold" fontSize="1.1rem"
-                  >
-                    {progress.percent}%
-                  </text>
-                </svg>
+                <svg className="w-20 h-20" viewBox="0 0 40 40">
+  <circle
+    cx="20" cy="20" r="18"
+    fill="none"
+    stroke="#e0e7ff"
+    strokeWidth="4"
+  />
+  <circle
+    cx="20" cy="20" r="18"
+    fill="none"
+    stroke="#14b8a6"
+    strokeWidth="4"
+    strokeDasharray={2 * Math.PI * 18}
+    strokeDashoffset={2 * Math.PI * 18 * (1 - (Number(progress.percent) || 0) / 100)}
+    strokeLinecap="round"
+    style={{
+      transition: 'stroke-dashoffset 0.5s',
+      filter: 'drop-shadow(0 0 2px #14b8a6)',
+      transform: 'rotate(-90deg)',
+      transformOrigin: '50% 50%'
+    }}
+  />
+  <text
+    x="50%" y="54%" textAnchor="middle" dominantBaseline="middle"
+    className="fill-teal-700 text-xl font-bold" fontSize="1.1rem"
+    style={{ pointerEvents: 'none', userSelect: 'none' }}
+  >
+    {(Number(progress.percent) || 0)}%
+  </text>
+</svg>
               </div>
               <div className="text-teal-700 font-semibold mb-1">{progress.percent}% complete</div>
               <div className="text-gray-500 text-xs">Keep learning to reach 100%!</div>
