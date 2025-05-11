@@ -3,6 +3,14 @@ Flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
 
-# Frontend Dependencies (to be installed separately)
-# React dependencies will be managed by npm
-# Add frontend dependencies here as needed
+# Frontend Dependencies (install with npm or yarn, not pip)
+# These are for reference only:
+#   react
+#   react-dom
+#   react-scripts
+#   tailwindcss
+#   autoprefixer
+#   postcss
+#   @headlessui/react (if used for modals, etc.)
+#   @heroicons/react (if used for icons)
+# Install using: npm install <package> or yarn add <package>
