@@ -30,56 +30,37 @@ const courses = [
 export default function CourseCatalogue({ onSelectCourse }) {
   return (
     <div>
-      <h1 style={{ fontWeight: 700, fontSize: "1.5rem", marginBottom: "1.5rem" }}>Course Catalogue</h1>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: "1.5rem"
-      }}>
+      <h1 className="font-bold text-2xl mb-6">Course Catalogue</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {courses.map(course => (
           <div
             key={course.id}
-            className="course-card"
-            style={{
-              background: "#fff",
-              borderRadius: 10,
-              boxShadow: "0 2px 8px rgba(80,112,255,0.06)",
-              padding: "1.2rem 1rem",
-              opacity: course.working ? 1 : 0.6,
-              cursor: course.working ? "pointer" : "not-allowed",
-              border: course.working ? "2px solid #4a6bff" : "2px solid #e5eaf1",
-              transition: "box-shadow 0.2s"
-            }}
+            className={`rounded-xl shadow p-5 bg-white flex flex-col justify-between border transition hover:shadow-lg ${course.working ? 'border-blue-400 cursor-pointer' : 'border-gray-200 opacity-60 cursor-not-allowed'}`}
             onClick={() => course.working && onSelectCourse(course.id)}
             title={course.working ? "Open course" : "This is a placeholder"}
           >
-            <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#1d3d91", marginBottom: 8 }}>{course.title}</div>
-            <div style={{ color: "#555", fontSize: "0.98rem", marginBottom: 10 }}>{course.description}</div>
+            <div>
+              <div className="font-semibold text-lg text-blue-900 mb-2">{course.title}</div>
+              <div className="text-gray-600 text-sm mb-4">{course.description}</div>
+            </div>
             {course.working ? (
-              <button
-                style={{
-                  background: "#4a6bff",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 5,
-                  padding: "0.5rem 1rem",
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
+              <a
+                href={course.id === 'ai' ? '/course-page' : '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => { e.stopPropagation(); }}
+                className="block"
               >
-                View Course
-              </button>
+                <button
+                  className="w-full mt-2 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold transition-colors"
+                  onClick={e => { e.preventDefault(); onSelectCourse(course.id); }}
+                >
+                  View Course
+                </button>
+              </a>
             ) : (
               <button
-                style={{
-                  background: "#e5eaf1",
-                  color: "#aaa",
-                  border: "none",
-                  borderRadius: 5,
-                  padding: "0.5rem 1rem",
-                  fontWeight: 600,
-                  cursor: "not-allowed"
-                }}
+                className="w-full mt-2 py-2 px-4 bg-gray-200 text-gray-400 rounded font-semibold cursor-not-allowed"
                 disabled
               >
                 Coming Soon

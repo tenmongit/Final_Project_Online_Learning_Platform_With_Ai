@@ -22,35 +22,31 @@ export default function UserProfile() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "2rem" }}>
+      <div className="flex items-center gap-6 mb-8">
         <img
           src={user.avatar}
           alt="avatar"
-          style={{ width: 72, height: 72, borderRadius: "50%", border: "2px solid #e5eaf1" }}
+          className="w-20 h-20 rounded-full border-2 border-blue-100 shadow-sm"
         />
         <div>
-          <div style={{ fontWeight: 700, fontSize: "1.2rem" }}>{user.name}</div>
-          <div style={{ color: "#4a6bff" }}>{user.email}</div>
+          <div className="font-bold text-lg">{user.name}</div>
+          <div className="text-blue-600">{user.email}</div>
         </div>
       </div>
       <div>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.5rem" }}>Course Progress</h2>
+        <h2 className="text-base font-semibold mb-2">Course Progress</h2>
         {loading && <div>Loading progress...</div>}
-        {error && <div style={{ color: "#e53e3e" }}>{error}</div>}
+        {error && <div className="text-red-500">{error}</div>}
         {progress && (
-          <div style={{ background: "#eaf0ff", borderRadius: 8, padding: "1rem" }}>
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>Progress:</div>
-            <div style={{ background: "#d6e4ff", borderRadius: 4, height: 16, overflow: "hidden", marginBottom: 8 }}>
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="font-semibold mb-2">Progress:</div>
+            <div className="bg-blue-100 rounded h-4 overflow-hidden mb-2">
               <div
-                style={{
-                  width: `${progress.percent}%`,
-                  background: "#4a6bff",
-                  height: "100%",
-                  transition: "width 0.5s"
-                }}
+                className="bg-blue-500 h-full transition-all duration-500"
+                style={{ width: `${progress.percent}%` }}
               ></div>
             </div>
-            <div style={{ color: "#1d3d91", fontWeight: 600 }}>{progress.percent}% complete</div>
+            <div className="text-blue-900 font-semibold">{progress.percent}% complete</div>
           </div>
         )}
       </div>

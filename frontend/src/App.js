@@ -2,73 +2,65 @@ import React, { useState } from "react";
 import CoursePage from "./CoursePage";
 import UserProfile from "./UserProfile";
 import CourseCatalogue from "./CourseCatalogue";
-import "./App.css";
+
 
 function App() {
   const [page, setPage] = useState("profile");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  // For course navigation, optionally store selected course id
-  // Only 'ai' is implemented
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   return (
-    <div className="app-root">
-      {/* Sticky Header */}
-      <header className="app-header">
-        <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <span className="hamburger" />
-        </button>
-        <h1 className="header-title">LearnAI Platform</h1>
-      </header>
-
-      <div className="app-layout">
-        {/* Sidebar (collapsible on mobile) */}
-        <nav className={`sidebar${sidebarOpen ? " open" : ""}`} onClick={() => setSidebarOpen(false)}>
-          <div className="sidebar-content">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Top Navbar */}
+      <header className="w-full bg-white shadow-sm sticky top-0 z-20">
+        <nav className="container mx-auto flex items-center justify-between py-3 px-4">
+          <span className="text-xl font-bold text-blue-700">LearnAI Platform</span>
+          <div className="flex gap-4">
             <button
-              className={`sidebar-link${page === "profile" ? " active" : ""}`}
-              onClick={e => { e.stopPropagation(); setPage("profile"); setSelectedCourse(null); }}
+              className={`px-3 py-1 rounded font-medium transition-colors ${page === "profile" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}
+              onClick={() => { setPage("profile"); setSelectedCourse(null); }}
             >
-              User Profile
+              Profile
             </button>
             <button
-              className={`sidebar-link${page === "catalogue" ? " active" : ""}`}
-              onClick={e => { e.stopPropagation(); setPage("catalogue"); setSelectedCourse(null); }}
+              className={`px-3 py-1 rounded font-medium transition-colors ${page === "catalogue" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}
+              onClick={() => { setPage("catalogue"); setSelectedCourse(null); }}
             >
-              Course Catalogue
+              Courses
             </button>
-            {/* Only show Course Page if a course is selected */}
             {selectedCourse === "ai" && (
               <button
-                className={`sidebar-link${page === "course" ? " active" : ""}`}
-                onClick={e => { e.stopPropagation(); setPage("course"); }}
+                className={`px-3 py-1 rounded font-medium transition-colors ${page === "course" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}
+                onClick={() => setPage("course")}
               >
                 Introduction to AI
               </button>
             )}
-
           </div>
         </nav>
+      </header>
 
-        {/* Main Content */}
-        <main className="main-content">
-          <div className="main-card">
-            {page === "profile" && <UserProfile />}
-            {page === "catalogue" && (
-              <CourseCatalogue
-                onSelectCourse={courseId => {
-                  if (courseId === "ai") {
-                    setSelectedCourse("ai");
-                    setPage("course");
-                  }
-                }}
-              />
-            )}
-            {page === "course" && selectedCourse === "ai" && <CoursePage />}
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-6 w-full max-w-4xl">
+        <div className="bg-white rounded-lg shadow-md p-6 min-h-[300px]">
+          {page === "profile" && <UserProfile />}
+          {page === "catalogue" && (
+            <CourseCatalogue
+              onSelectCourse={courseId => {
+                if (courseId === "ai") {
+                  setSelectedCourse("ai");
+                  setPage("course");
+                }
+              }}
+            />
+          )}
+          {page === "course" && selectedCourse === "ai" && <CoursePage />}
+        </div>
+      </main>
 
-          </div>
-        </main>
-      </div>
+      {/* Footer */}
+      <footer className="w-full bg-white border-t py-3 text-center text-gray-400 text-sm mt-8">
+        &copy; {new Date().getFullYear()} LearnAI. All rights reserved.
+      </footer>
     </div>
   );
 }
