@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+</head>
+<body>
+    <h2>Регистрация</h2>
+    {% if error %}<div style="color:red;">{{ error }}</div>{% endif %}
+    <form method="post">
+        <input name="username" placeholder="Имя пользователя" required><br>
+        <input name="email" placeholder="Email" required><br>
+        <input name="password" type="password" placeholder="Пароль" required><br>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+</body>
+</html>

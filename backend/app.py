@@ -1,5 +1,5 @@
 print('DEBUG: Starting app.py')
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from flask_cors import CORS
 import logging
 import json
@@ -16,10 +16,60 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 CORS(app)
 db.init_app(app)
 
 print('DEBUG: End of app.py (minimal test)')
+
+# --- Web (HTML) routes enforcing registration/login flow ---
+@app.route("/register", methods=["GET", "POST"])
+def register_web():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        if not username or not email or not password:
+            return render_template('register.html', error="Все поля обязательны!")
+        if User.query.filter_by(username=username).first():
+            return render_template('register.html', error="Пользователь с таким именем уже существует!")
+        if User.query.filter_by(email=email).first():
+            return render_template('register.html', error="Пользователь с таким email уже существует!")
+        password_hash = generate_password_hash(password)
+        new_user = User(username=username, email=email, password_hash=password_hash)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login_web'))
+    return render_template('register.html', error=None)
+
+@app.route("/login", methods=["GET", "POST"])
+def login_web():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        identifier = request.form.get('username') or request.form.get('email')
+        password = request.form.get('password', '')
+        user = User.query.filter((User.username == identifier) | (User.email == identifier)).first()
+        if user and check_password_hash(user.password_hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('login.html', error="Неверные данные для входа")
+    return render_template('login.html', error=None)
+
+@app.route("/dashboard")
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login_web'))
+    return render_template('dashboard.html', username=session.get('username'))
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for('login_web'))
 
 @app.route("/api/register", methods=["POST"])
 def register():
