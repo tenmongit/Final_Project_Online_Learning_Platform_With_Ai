@@ -9,10 +9,15 @@ function App() {
   const [page, setPage] = useState("profile");
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   if (!isAuthenticated) {
     return (
-      <LoginPage onLogin={() => setIsAuthenticated(true)} />
+      <LoginPage onLogin={(user) => {
+        setIsAuthenticated(true);
+        setUserData(user);
+        console.log("User logged in:", user);
+      }} />
     );
   }
 
@@ -56,7 +61,7 @@ function App() {
       <main className="flex-1 w-full bg-[#1a1f2e]">
         <div className="container mx-auto px-4 py-6 w-full max-w-4xl">
           {/* We don't need the container since each component has its own container */}
-          {page === "profile" && <UserProfile onSignOut={() => setIsAuthenticated(false)} />}
+          {page === "profile" && <UserProfile user={userData} onSignOut={() => setIsAuthenticated(false)} />}
           {page === "catalogue" && (
             <CourseCatalogue
               onSelectCourse={courseId => {

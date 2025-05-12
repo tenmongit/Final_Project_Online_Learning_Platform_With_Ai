@@ -4,7 +4,8 @@ export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); // Can be string or {type, message} for success/error
+
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -17,18 +18,41 @@ export default function LoginPage({ onLogin }) {
   });
   const [signUpError, setSignUpError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Example credentials
-    const demoEmail = "demo@email.com";
-    const demoPassword = "password123";
+    
     if (!email || !password) {
       setError("Please enter both email and password.");
-    } else if (email === demoEmail && password === demoPassword) {
+      return;
+    }
+    
+    try {
       setError("");
-      if (onLogin) onLogin();
-    } else {
-      setError("Invalid email or password. Try demo@email.com / password123");
+      const response = await fetch('http://127.0.0.1:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password 
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || "Login failed. Please check your credentials.");
+        return;
+      }
+      
+      // Login successful
+      setError("");
+      if (onLogin) onLogin(data.user); // Pass user data to parent component
+
+    } catch (err) {
+      console.error('Login error:', err);
+      setError("Connection error. Please try again later.");
     }
   };
   
@@ -47,7 +71,7 @@ export default function LoginPage({ onLogin }) {
     }, 3000);
   };
   
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     const { name, email, password, confirmPassword } = signUpData;
     
@@ -62,12 +86,41 @@ export default function LoginPage({ onLogin }) {
       return;
     }
     
-    // Simulate successful signup
-    setSignUpError("");
-    setEmail(email);
-    setPassword(password);
-    setShowSignUp(false);
-    setSignUpData({ name: "", email: "", password: "", confirmPassword: "" });
+    try {
+      setSignUpError("");
+      const response = await fetch('http://127.0.0.1:5000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          username: name, 
+          email, 
+          password 
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setSignUpError(data.error || "Registration failed. Please try again.");
+        return;
+      }
+
+      
+      // Registration successful - auto-fill login form
+      setEmail(email);
+      setPassword(password);
+      setShowSignUp(false);
+      setSignUpData({ name: "", email: "", password: "", confirmPassword: "" });
+      
+      // Show success message
+      setError({ type: 'success', message: "Registration successful! You can now log in." });
+      if (onLogin) onLogin({ username: name, email });
+    } catch (err) {
+      console.error('Registration error:', err);
+      setSignUpError("Connection error. Please try again later.");
+    }
   };
   
   const handleSignUpChange = (e) => {
@@ -133,7 +186,14 @@ export default function LoginPage({ onLogin }) {
               </button>
             </div>
           </div>
-          {error && <div className="text-red-500 text-sm text-center -mt-4">{error}</div>}
+          {error && (typeof error === 'string' ? (
+            <div className="text-red-500 text-sm text-center -mt-4">{error}</div>
+          ) : error.type === 'success' ? (
+            <div className="text-green-500 text-sm text-center -mt-4">{error.message}</div>
+          ) : (
+            <div className="text-red-500 text-sm text-center -mt-4">{error.message}</div>
+          ))}
+
           <button
             type="submit"
             className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-pink-500 hover:to-indigo-500 text-white font-bold text-lg shadow-lg transition-transform transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"

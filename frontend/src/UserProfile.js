@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getProgress } from "./api";
 
-export default function UserProfile({ onSignOut }) {
+export default function UserProfile({ onSignOut, user }) {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,12 +13,9 @@ export default function UserProfile({ onSignOut }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Static user info for demonstration
-  const user = {
-    name: "Jane Doe",
-    email: "jane.doe@email.com",
-    avatar: "https://ui-avatars.com/api/?name=Jane+Doe&background=14b8a6&color=fff"
-  };
+  // Fallback if user is not passed
+  const displayUser = user || { name: "Tiger Learner", email: "tiger@edu.com" };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1a1f2e] py-10">
@@ -33,16 +30,32 @@ export default function UserProfile({ onSignOut }) {
         
         <div className="flex flex-col items-center gap-4 mb-6 mt-6">
           <div className="relative">
-            <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg">
-              <span className="text-white text-5xl font-bold">JD</span>
-              <div className="absolute -bottom-2 inset-x-0 flex justify-center">
-                <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs px-3 py-1 rounded-full shadow">Learner</span>
-              </div>
+            <div className="relative w-28 h-28 rounded-full flex items-center justify-center shadow-lg bg-white">
+            {/* Tiger SVG Avatar */}
+            <svg viewBox="0 0 100 100" className="w-28 h-28">
+              <circle cx="50" cy="50" r="48" fill="#fbbf24" stroke="#f59e42" strokeWidth="4"/>
+              <ellipse cx="50" cy="72" rx="22" ry="14" fill="#fff7e6"/>
+              <ellipse cx="35" cy="45" rx="6" ry="8" fill="#fff"/>
+              <ellipse cx="65" cy="45" rx="6" ry="8" fill="#fff"/>
+              <ellipse cx="35" cy="47" rx="3" ry="4" fill="#333"/>
+              <ellipse cx="65" cy="47" rx="3" ry="4" fill="#333"/>
+              <ellipse cx="50" cy="65" rx="6" ry="4" fill="#333"/>
+              <path d="M20 40 Q15 50 20 60" stroke="#f59e42" strokeWidth="3" fill="none"/>
+              <path d="M80 40 Q85 50 80 60" stroke="#f59e42" strokeWidth="3" fill="none"/>
+              <path d="M50 30 Q48 38 52 38 Q54 38 52 32" stroke="#333" strokeWidth="2" fill="none"/>
+              {/* Tiger stripes */}
+              <path d="M30 30 Q35 40 30 50" stroke="#333" strokeWidth="2" fill="none"/>
+              <path d="M70 30 Q65 40 70 50" stroke="#333" strokeWidth="2" fill="none"/>
+              <path d="M50 20 Q50 25 55 28" stroke="#333" strokeWidth="2" fill="none"/>
+            </svg>
+            <div className="absolute -bottom-2 inset-x-0 flex justify-center">
+              <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs px-3 py-1 rounded-full shadow">Tiger Learner</span>
             </div>
           </div>
+          </div>
           <div className="text-center">
-            <div className="font-extrabold text-2xl text-white mb-1">{user.name}</div>
-            <div className="text-gray-400 text-sm mb-1">{user.email}</div>
+            <div className="font-extrabold text-2xl text-white mb-1">{displayUser.name}</div>
+            <div className="text-gray-400 text-sm mb-1">{displayUser.email}</div>
           </div>
         </div>
         

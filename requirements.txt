@@ -2,19 +2,25 @@
 Flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
-flask_sqlalchemy>=3.0.0
 werkzeug>=3.0.0
+
+# AI Integration
 huggingface_hub>=0.21.0
 transformers>=4.36.0
 
-# Frontend Dependencies (install with npm or yarn, not pip)
-# These are for reference only:
-#   react
-#   react-dom
-#   react-scripts
-#   tailwindcss
-#   autoprefixer
-#   postcss
-#   @headlessui/react (if used for modals, etc.)
-#   @heroicons/react (if used for icons)
-# Install using: npm install <package> or yarn add <package>
+# Database
+sqlite3>=3.35.0
+
+# Testing
+pytest>=7.0.0
+
+# Frontend Dependencies (install separately with npm)
+# cd frontend && npm install
+#
+# Main frontend packages:
+# - react@19.1.0
+# - react-dom@19.1.0
+# - react-scripts@5.0.1
+# - tailwindcss@3.4.3
+# - @headlessui/react@2.2.2
+# - @heroicons/react@2.2.0

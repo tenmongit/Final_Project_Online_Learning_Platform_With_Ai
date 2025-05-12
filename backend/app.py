@@ -4,21 +4,23 @@ from flask_cors import CORS
 import logging
 import json
 import os
-from flask_sqlalchemy import SQLAlchemy
-from backend.models import db, User, QuizResult
+import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 load_dotenv()
+
+# Database helper functions
+def get_db_connection():
+    conn = sqlite3.connect('app.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')
 CORS(app)
-db.init_app(app)
 
 print('DEBUG: End of app.py (minimal test)')
 
@@ -76,36 +78,74 @@ def register():
     data = request.get_json()
     if not data or not all(k in data for k in ("username", "email", "password")):
         return jsonify({"error": "Missing username, email, or password"}), 400
+    
     username = data["username"].strip()
     email = data["email"].strip()
     password = data["password"]
 
-    if User.query.filter_by(username=username).first():
+    # Check if username or email already exists
+    conn = get_db_connection()
+    user_by_username = conn.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
+    user_by_email = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
+    
+    if user_by_username:
+        conn.close()
         return jsonify({"error": "Username already exists"}), 409
-    if User.query.filter_by(email=email).first():
+    
+    if user_by_email:
+        conn.close()
         return jsonify({"error": "Email already exists"}), 409
 
+    # Create new user
     password_hash = generate_password_hash(password)
-    new_user = User(username=username, email=email, password_hash=password_hash)
-    db.session.add(new_user)
-    db.session.commit()
+    conn.execute(
+        'INSERT INTO user (username, email, password_hash) VALUES (?, ?, ?)',
+        (username, email, password_hash)
+    )
+    conn.commit()
+    
+    # Get the newly created user to return
+    user = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    
     logger.info(f"New user registered: {username} ({email})")
-    return jsonify({"message": "User registered successfully!"}), 201
+    return jsonify({
+        "message": "User registered successfully",
+        "user": {
+            "id": user['id'],
+            "username": user['username'],
+            "email": user['email']
+        }
+    }), 201
 
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    if not data or not ("username" in data or "email" in data) or "password" not in data:
-        return jsonify({"error": "Missing username/email or password"}), 400
-    identifier = data.get("username") or data.get("email")
+    if not data or not all(k in data for k in ("email", "password")):
+        return jsonify({"error": "Missing email or password"}), 400
+    
+    email = data["email"].strip()
     password = data["password"]
-    user = User.query.filter((User.username == identifier) | (User.email == identifier)).first()
-    if user and check_password_hash(user.password_hash, password):
-        logger.info(f"User logged in: {user.username} ({user.email})")
-        return jsonify({"message": "Login successful!", "username": user.username, "email": user.email}), 200
+    
+    # Find user by email
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM user WHERE email = ?', (email,)).fetchone()
+    
+    if user and check_password_hash(user['password_hash'], password):
+        conn.close()
+        # Return user data (excluding sensitive information)
+        return jsonify({
+            "message": "Login successful",
+            "user": {
+                "id": user['id'],
+                "username": user['username'],
+                "email": user['email']
+            }
+        }), 200
     else:
-        logger.warning(f"Failed login attempt for: {identifier}")
-        return jsonify({"error": "Invalid username/email or password"}), 401
+        conn.close()
+        logger.warning(f"Failed login attempt for: {email}")
+        return jsonify({"error": "Invalid email or password"}), 401
 
 @app.route("/api/explain", methods=["POST"])
 def explain():
@@ -123,7 +163,7 @@ def explain():
         f"Explanation:"
     )
     try:
-        from backend.services.ai_model import explain as ai_explain
+        from services.ai_model import explain as ai_explain
         explanation = ai_explain(prompt)
     except Exception as e:
         logger.error(f"AI explanation error: {e}")
@@ -139,7 +179,7 @@ def chat():
     message = data["message"]
     logger.info(f"Chat endpoint called with message: {message}")
     try:
-        from backend.services.ai_service import generate_ai_response
+        from services.ai_service import generate_ai_response
         reply = generate_ai_response(message)
         logger.info(f"AI reply: {reply}")
     except Exception as e:
@@ -203,8 +243,7 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
+    # Database is already created by init_db.py
     logger.info("Starting Flask application...")
     print("\nRegistered endpoints:")
     for rule in app.url_map.iter_rules():
